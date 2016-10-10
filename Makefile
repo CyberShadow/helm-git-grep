@@ -2,7 +2,7 @@
 EMACS ?= emacs
 CASK ?= cask
 SRC ?= helm-git-grep.el
-FIXTURE_GIT_VERSION ?= v1.0.0
+FIXTURE_GIT_VERSION ?= v2.0.0
 FIXTURE_GIT_WORK_DIR ?= test/fixture/git
 TEST_CHECKDOC_EL ?=  test/test-checkdoc.el
 LOADPATH = -L .
@@ -14,7 +14,7 @@ test: test-checkdoc unit-tests
 
 .PHONY : unit-tests
 # `clean-elc` task needs to remove byte-compiled files to collect coverage by undercover.el.
-unit-tests: clean-elc elpa
+unit-tests: clean-elc elpa fixture
 	@echo "-- Running unit-tests --"
 	${CASK} exec ert-runner
 
