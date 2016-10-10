@@ -32,6 +32,15 @@
 (require 'ert)
 (require 'mocker)
 (require 'f)
+(require 'ert-async)
+
+(setq ert-async-timeout 2)
+
+
+(defun test/delay (seconds callback)
+  "Wait SECONDS, then run function CALLBACK."
+  (declare (indent 1))
+  (run-at-time seconds nil callback))
 
 (defvar test/test-path
   (if load-file-name
@@ -42,12 +51,34 @@
   (f-parent test/test-path))
 
 (defvar test/fixture-path
-  (f-join test/test-path "fixture/git"))
+  (f-join test/test-path "fixture/"))
+(defvar test/fixture-repo-path
+  (f-join test/fixture-path "git/"))
+
 
 (defun should-equal? (a b)
     (should (equal a b)))
 (defun should-not-equal? (a b)
     (should-not (equal a b)))
+
+(defun helm-git-grep-process-ret (dir filter)
+  (let ((default-directory dir))
+    (let ((process (helm-git-grep-start-process)))
+      (set-process-filter process filter)
+      (set-process-sentinel
+       process
+       (lambda (proc event)
+         (should (eq 'exit (process-status proc)))
+         (should (= 0 (process-exit-status proc))))))))
+
+(ert-deftest-async test/helm-git-start-process (done)
+  (let ((helm-pattern "defun"))
+    (helm-git-grep-process-ret
+     test/fixture-repo-path
+     (lambda (proc string)
+       (should (stringp string))
+       )))
+  (test/delay 0.01 done))
 
 (ert-deftest test/helm-git-grep-base-directory ()
   (let ((expected "/tmp/git"))
@@ -59,8 +90,8 @@
       (should-equal? (helm-git-grep-base-directory) expected))))
 
 (ert-deftest test/helm-git-grep-get-top-dir ()
-  (let ((default-directory (concat test/fixture-path "/Documentation/howto")))
-    (f-equal? (helm-git-grep-get-top-dir) (concat test/fixture-path)))
+  (let ((default-directory (concat test/fixture-repo-path "/Documentation/howto")))
+    (f-equal? (helm-git-grep-get-top-dir) (concat test/fixture-repo-path)))
   (mocker-let ((helm-git-grep-git-string
                 (a b) ((:input '("rev-parse" "--show-cdup") :output nil))))
     (should-equal? (helm-git-grep-get-top-dir) nil)))

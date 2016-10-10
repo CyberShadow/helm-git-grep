@@ -260,11 +260,16 @@ newline return an empty string."
                            (split-string helm-pattern " +" t)
                            "--and "))))
 
+(defun helm-git-grep-start-process (&optional buf)
+  "Start git-grep(1) process.
+BUF is the buffer (or buffer name) to associate with the process or nil."
+  (apply 'start-process "git-grep-process" buf "git" (helm-git-grep-args)))
+
 (defun helm-git-grep-process ()
   "Retrieve candidates from result of git grep."
   (helm-aif (helm-attr 'base-directory)
       (let ((default-directory it))
-        (apply 'start-process "git-grep-process" nil "git" (helm-git-grep-args))) '()))
+        (helm-git-grep-start-process)) '()))
 
 (defun helm-git-submodule-grep-process ()
   "Retrieve candidates from result of git grep submodules."
