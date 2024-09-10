@@ -301,14 +301,10 @@ newline return an empty string."
 (defun helm-git-grep-submodule-grep-command ()
   "Create command of `helm-git-submodule-grep-process' in `helm-git-grep'."
   (list "git" "--no-pager" "submodule" "--quiet" "foreach"
-       (format "git grep -n --no-color %s %s %s %s | sed s!^!$path/!"
-               (if helm-git-grep-ignore-case "-i" "")
-               (if helm-git-grep-wordgrep "-w" "")
-               (helm-git-grep-showing-leading-and-trailing-lines-option t)
-                (mapconcat (lambda (x)
-                             (format "-e %s " (shell-quote-argument x)))
-                           (helm-git-grep--split-pattern helm-pattern)
-                           "--and "))))
+        (format "git %s | sed s\\!^\\!$sm_path/\\!"
+                (mapconcat #'shell-quote-argument
+                           (helm-git-grep-args)
+                           " "))))
 
 (defun helm-git-grep-process ()
   "Retrieve candidates from result of git grep."
